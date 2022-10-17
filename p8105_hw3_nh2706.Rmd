@@ -5,12 +5,21 @@ date: "10/14/2022"
 output: github_document
 ---
 
-```{r}
+```{r setup, include = FALSE}
 library(tidyverse)
-library(patchwork)
-library(ggridges)
 library(p8105.datasets)
+library(ggridges)
+library(patchwork)
 ```
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_chunk$set(
+  fig.width = 12,
+  fig.asp = .7,
+  out.width = "90%")
+```
+
 
 #Problem 1
 Omitted, as solutions are provided by Professor. 
@@ -21,8 +30,7 @@ Omitted, as solutions are provided by Professor.
 #Problem 3
 
 ### Load the data from the p8105.datasets
-
-```{r}
+```{r load_data}
 data("ny_noaa")
 ```
 
@@ -30,7 +38,7 @@ data("ny_noaa")
 The data shows `r ncol(ny_noaa)` variables (`r names(ny_noaa)`) from New York state weather stations from January 1, 1981 through December 31, 2010. It has `r nrow(ny_noaa)` obersvations. Key variables include `r names(ny_noaa)[1]`, which denotes the weather station ID, and `r names(ny_noaa)[2]`, which indicates the date of each subsequent observation. Since each weather station might not collect all variables, missing data is a major issue in the context of this data.
 
 ### Data cleaning.
-```{r}
+```{r clean_data}
 clean_noaa_df = ny_noaa %>%
   janitor::clean_names() %>%
   separate(date, into = c("year", "month", "day"), sep = '-') %>%
@@ -41,7 +49,6 @@ clean_noaa_df = ny_noaa %>%
          tmin = as.numeric(tmin)/10,
          prcp = as.numeric(prcp)/10)
 ```
-
 
 ### Mode for Snow
 ```{r}
@@ -55,7 +62,6 @@ find_mode <- function(a) {
 The most commonly observed values for snowfall are `r find_mode(clean_noaa_df$snow)`, which makes sense because most of the year there is no snow-fall.
 
 ### Two-panel plot showing the average max temperature in January and in July in each station across years
-
 ```{r}
 mean_max_temp = clean_noaa_df %>%
   filter(month == "Jan" | month == "Jul") %>%  
@@ -86,16 +92,18 @@ maxmin_plot = clean_noaa_df %>%
   labs(title = "Max vs Min Temp over years",
        x = "Max Temp (C)",
        y = "Min Temp (C)",
-       caption = "Data from NY NOAA.")
+       caption = "Data from NY NOAA.") +
+  theme(legend.position = "left")
 ```
 
 ```{r}
 snowfall_plot = clean_noaa_df %>%
   filter(snow > 0, snow < 100) %>%
-  ggplot(aes(x = year, y = year)) +
-  geom_line() +
+  ggplot(aes(x = snow, y = as.factor(year))) +
+  geom_density_ridges(scale = 1) +
+  xlim(0, 100) +
   labs(title = "Snowfall Distribution by Year (0-100 mm)",
-       x = "Snowfall (mm)",
+       x = "Snowfall",
        y = "Year",
        caption = "Data from NY NOAA.")
 ```
@@ -103,4 +111,3 @@ snowfall_plot = clean_noaa_df %>%
 ```{r}
 maxmin_plot + snowfall_plot
 ```
-
