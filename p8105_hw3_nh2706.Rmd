@@ -25,23 +25,35 @@ Omitted, as solutions are provided by Professor.
 #### First, I am loading and cleaning the data ahead of the next problems
 ```{r load_data_accel, message = FALSE, warning = FALSE}
 accel_df = read_csv("Data/accel_data.csv") %>%
+  
+  # cleaning the names, creating a new 'weekend' variable, and adjusting variable format.
   janitor::clean_names() %>%
   mutate(weekend = ifelse((day == "Saturday" | day == "Sunday"),"Weekend","Weekday"),
          day = as.factor(day),
          weekend = as.factor(weekend))  %>%
+  
+  # relocating variables in desired order
   relocate(week,day_id, day,weekend)
 ```
+-   The dataset contains the following key variables `r names(accel_df)`
+-   There are `r nrow(accel_df)` and `r ncol(accel_df)`
+-   The dataset covers accelerometer data from an individual patient over a `r nrow(accel_df period)`
 
 #### Second, I am calculating the activity totals and then dropping the individuals activity variables
 ```{r activity_totals, message = FALSE, warning = FALSE}
 aggregate_accel_df = accel_df %>%
+  
+  # Creating a new total_activity variable
   mutate(total_activity = rowSums(accel_df[,c(5:1444)])) %>%
+  
+  #Grouping the dataset by day_id, relocating the dataset, and dropping all detailed activity variables
   group_by(day_id) %>%
   relocate(week,day_id, day,weekend,total_activity) %>%
   select(1:5)
 
 knitr::kable(aggregate_accel_df)
 ```
+To better understand potential trends, I am graphing the resulting data in the next section.
 
 #### Third, I am showing the day activity to identify any interesting trends throughout the study period.
 ```{r plot_1_accel, message = FALSE, warning = FALSE}
@@ -57,6 +69,8 @@ ggplot(aggregate_accel_df,aes(x = day_id, y = total_activity, color = weekend)) 
   scale_x_continuous(breaks = seq(0,35,by = 5)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
+There are no real clear trends visible - the data shows that activity varies significantly and throughout all days. During the last 2 weeks of the study, weekend activity drops significantly, but this is not the case during the first 3 weeks. Further investigation will be required to draw clear conclusions.
+
 
 #### Fourth, I am converting the data to long-format, to be able to plot minutes by days
 ```{r accel_long, message = FALSE, warning = FALSE}
@@ -86,7 +100,7 @@ accel_longer_df %>%
     caption = "Visual Depiction of accel_data.csv for trends"
     )
 ```
-
+The graph shows that activity is centered around specific times during the day. Most notably, during the evening between 8pm and 10pm is the most active time. Other active times are around 7am, 11am-12pm, and around 5pm. However, during the rest of the day, there is almost no activity. These patterns appear to show the patients daily schedules (from wake-up, over lunch, to evening activity) and one can conclude that an increase in activity during the remaining (non-sleeping) times could improve health outcomes.
 
 
 # Problem 3
@@ -142,7 +156,11 @@ mean_max_temp = clean_noaa_df %>%
 mean_max_temp
 ```
 
-Is there any observable / interpretable structure? Any outliers?
+The graph clearly shows a number of structures:
+-   Mean max temps are much lower in January than July, which was clearly expected
+-   The trend of January max temperatures appear to have been increasing since the first observation. This fits with the global warming phenomenon.
+-   Temperatures have been fluctuating significantly throughout the years - somewhat regularly, max temps have been moving +- 10(C) every few years. This is an interesting phenomenon and should be studied closer.
+-   There are a few outliers temperature points throughout the years, which likely pertain to a temperature station that experienced an abnormal weather condition.
 
 #### Sixth, I graph a two-panel plot showing tmax vs tmin for the full dataset 
 
@@ -159,7 +177,7 @@ maxmin_plot = clean_noaa_df %>%
 snowfall_plot = clean_noaa_df %>%
   filter(snow > 0, snow < 100) %>%
   ggplot(aes(x = snow, y = as.factor(year))) +
-  geom_density_ridges(scale = 1) +
+  geom_density_ridges(scale = 0.9) +
   xlim(0, 100) +
   labs(title = "Snowfall Distribution by Year (0-100 mm)",
        x = "Snowfall",
