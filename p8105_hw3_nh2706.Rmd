@@ -10,27 +10,47 @@ library(tidyverse)
 library(p8105.datasets)
 library(ggridges)
 library(patchwork)
-```
-
-```{r}
 knitr::opts_chunk$set(echo = TRUE) 
 knitr::opts_chunk$set(
   fig.width = 12,
-  fig.asp = .7,
-  out.width = "90%")
+  fig.asp = .6,
+  out.width = "95%")
 ```
-
 
 #Problem 1
 Omitted, as solutions are provided by Professor. 
 
 #Problem 2
+```{r load_data_accel}
+accel_df = read_csv("Data/accel_data.csv") %>%
+  janitor::clean_names() %>%
+  
+  pivot_longer(
+    cols = activity_1:activity_1440,
+    names_to = "minute",
+    values_to = "activity",
+    names_prefix = "activity_"
+   ) %>%
+  mutate(weekend = ifelse((day == "Saturday" | day == "Sunday"),"Weekend","Weekday"),
+         minute = as.numeric(minute),
+         day = as.factor(day),
+         weekend = as.factor(weekend))  %>%
+  relocate(week,day_id, day,weekend)
+```
+
+
+```{r}
+aggregate_accel_df = accel_df %>%
+  group_by(day_id) %>%
+  summarize(activity)
+```
+
 
 
 #Problem 3
 
 ### Load the data from the p8105.datasets
-```{r load_data}
+```{r load_data_nynoaa}
 data("ny_noaa")
 ```
 
