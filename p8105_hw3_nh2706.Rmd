@@ -35,9 +35,9 @@ accel_df = read_csv("Data/accel_data.csv") %>%
   # relocating variables in desired order
   relocate(week,day_id, day,weekend)
 ```
--   The dataset contains the following key variables `r names(accel_df)`
--   There are `r nrow(accel_df)` and `r ncol(accel_df)`
--   The dataset covers accelerometer data from an individual patient over a `r nrow(accel_df period)`
+-   The dataset contains the following key variables `r names(accel_df[1:4])`
+-   There are `r nrow(accel_df)` observations and `r ncol(accel_df)` variables
+-   The dataset covers accelerometer data from an individual patient over a `r nrow(accel_df)/7` week period
 
 #### Second, I am calculating the activity totals and then dropping the individuals activity variables
 ```{r activity_totals, message = FALSE, warning = FALSE}
@@ -75,6 +75,8 @@ There are no real clear trends visible - the data shows that activity varies sig
 #### Fourth, I am converting the data to long-format, to be able to plot minutes by days
 ```{r accel_long, message = FALSE, warning = FALSE}
 accel_longer_df = accel_df %>%
+  
+  # adjusting data into a long format by activity and mutating variable format for next step
   pivot_longer(
     cols = activity_1:activity_1440,
     names_to = "minute",
@@ -116,6 +118,8 @@ The data shows `r ncol(ny_noaa)` variables (`r names(ny_noaa)`) from New York st
 #### Third, I am cleaning the data ahead of the next problems
 ```{r clean_data, message = FALSE, warning = FALSE}
 clean_noaa_df = ny_noaa %>%
+  
+  #Cleaning data and mutating variables to be in standard and usable format
   janitor::clean_names() %>%
   separate(date, into = c("year", "month", "day"), sep = '-') %>%
   mutate(month = as.numeric(month),
@@ -128,6 +132,8 @@ clean_noaa_df = ny_noaa %>%
 
 #### Fourth, I calculate the Mode for Snow and describe the rationale in more detail
 ```{r, message = FALSE, warning = FALSE}
+
+# Calcualting function for in-line r use for next sentence
 find_mode <- function(a) {
   value <- unique(a)
   tab <- tabulate(match(a, value))
@@ -140,9 +146,15 @@ The most commonly observed values for snowfall are `r find_mode(clean_noaa_df$sn
 #### Fifth, I graph a two-panel plot showing the average max temperature in January and in July in each station across years
 ```{r, message = FALSE, warning = FALSE}
 mean_max_temp = clean_noaa_df %>%
+  
+  # Filtering and Grouping dataset for further use
   filter(month == "Jan" | month == "Jul") %>%  
   group_by(id, year, month) %>% 
+  
+  # Creating the mean_max_temperature variable to be graphed
   summarize(mean_temperature = mean(tmax, na.rm = TRUE)) %>%
+ 
+  #Graphing the mean_max_temperature by years, paneled by month, and grouped by ID
   ggplot(aes(x = year, y = mean_temperature, group = id)) +
   geom_line() +
   facet_grid(. ~ month) +
@@ -157,14 +169,17 @@ mean_max_temp
 ```
 
 The graph clearly shows a number of structures:
+
 -   Mean max temps are much lower in January than July, which was clearly expected
 -   The trend of January max temperatures appear to have been increasing since the first observation. This fits with the global warming phenomenon.
 -   Temperatures have been fluctuating significantly throughout the years - somewhat regularly, max temps have been moving +- 10(C) every few years. This is an interesting phenomenon and should be studied closer.
--   There are a few outliers temperature points throughout the years, which likely pertain to a temperature station that experienced an abnormal weather condition.
+-   There are a few outlier temperature points throughout the years, which likely pertain to a temperature station that experienced an abnormal weather condition.
 
 #### Sixth, I graph a two-panel plot showing tmax vs tmin for the full dataset 
 
 ```{r, message = FALSE, warning = FALSE}
+
+# Plotting left panel of the graph, which will depict min- and max-temperatures for the entire dataset
 maxmin_plot = clean_noaa_df %>%
   ggplot(aes(x = tmax, y = tmin)) +
   geom_hex() +
@@ -174,6 +189,7 @@ maxmin_plot = clean_noaa_df %>%
        caption = "Data from NY NOAA.") +
   theme(legend.position = "left")
 
+# Plotting right panel of the graph, which will depict distribution of snowfall values greater than 0 and less than 100 separately by year
 snowfall_plot = clean_noaa_df %>%
   filter(snow > 0, snow < 100) %>%
   ggplot(aes(x = snow, y = as.factor(year))) +
@@ -184,5 +200,6 @@ snowfall_plot = clean_noaa_df %>%
        y = "Year",
        caption = "Data from NY NOAA.")
 
+# Graphing both together
 maxmin_plot + snowfall_plot
 ```
