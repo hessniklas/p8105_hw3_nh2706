@@ -12,16 +12,13 @@ library(ggridges)
 library(p8105.datasets)
 ```
 
-```{r}
-knitr::opts_chunk$set(echo = TRUE, 
-                      warning = FALSE,
-                      fig.width = 8,
-                      fig.asp = 1,
-                      out.width = "90%")
+#Problem 1
+Omitted, as solutions are provided by Professor. 
 
-theme_set(theme_minimal() + theme(legend.position = "bottom"))
-```
+#Problem 2
 
+
+#Problem 3
 
 ### Load the data from the p8105.datasets
 
@@ -33,23 +30,29 @@ data("ny_noaa")
 The data shows `r ncol(ny_noaa)` variables (`r names(ny_noaa)`) from New York state weather stations from January 1, 1981 through December 31, 2010. It has `r nrow(ny_noaa)` obersvations. Key variables include `r names(ny_noaa)[1]`, which denotes the weather station ID, and `r names(ny_noaa)[2]`, which indicates the date of each subsequent observation. Since each weather station might not collect all variables, missing data is a major issue in the context of this data.
 
 ### Data cleaning.
-
 ```{r}
 clean_noaa_df = ny_noaa %>%
   janitor::clean_names() %>%
   separate(date, into = c("year", "month", "day"), sep = '-') %>%
   mutate(month = as.numeric(month),
          year = as.numeric(year),
-         month = month.abb[month],
-         month = factor(month, levels = month.abb),
-         tmax = as.numeric(tmax),
-         tmin = as.numeric(tmin),
-         prcp = as.numeric(prcp))
+         month = factor(month.abb[month], levels = month.abb),
+         tmax = as.numeric(tmax)/10,
+         tmin = as.numeric(tmin)/10,
+         prcp = as.numeric(prcp)/10)
 ```
 
 
-The most commonly observed values for snowfall are 0mm, which makes sense because most of the year there is no snow-fall.
+### Mode for Snow
+```{r}
+find_mode <- function(a) {
+  value <- unique(a)
+  tab <- tabulate(match(a, value))
+  value[tab == max(tab)]
+}
+```
 
+The most commonly observed values for snowfall are `r find_mode(clean_noaa_df$snow)`, which makes sense because most of the year there is no snow-fall.
 
 ### Two-panel plot showing the average max temperature in January and in July in each station across years
 
@@ -89,7 +92,8 @@ maxmin_plot = clean_noaa_df %>%
 ```{r}
 snowfall_plot = clean_noaa_df %>%
   filter(snow > 0, snow < 100) %>%
-  ggplot(aes(x = snow, y = year)) +
+  ggplot(aes(x = year, y = year)) +
+  geom_line() +
   labs(title = "Snowfall Distribution by Year (0-100 mm)",
        x = "Snowfall (mm)",
        y = "Year",
