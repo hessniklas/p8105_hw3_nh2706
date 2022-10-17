@@ -1,11 +1,11 @@
 ---
 title: "HW3"
 author: "Niklas Hess"
-date: "10/14/2022"
+date: "10/17/2022"
 output: github_document
 ---
 
-```{r setup, include = FALSE}
+```{r setup, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(p8105.datasets)
 library(ggridges)
@@ -23,7 +23,7 @@ Omitted, as solutions are provided by Professor.
 # Problem 2
 
 #### First, I am loading and cleaning the data ahead of the next problems
-```{r load_data_accel, echo=FALSE}
+```{r load_data_accel, message = FALSE, warning = FALSE}
 accel_df = read_csv("Data/accel_data.csv") %>%
   janitor::clean_names() %>%
   mutate(weekend = ifelse((day == "Saturday" | day == "Sunday"),"Weekend","Weekday"),
@@ -33,7 +33,7 @@ accel_df = read_csv("Data/accel_data.csv") %>%
 ```
 
 #### Second, I am calculating the activity totals and then dropping the individuals activity variables
-```{r activity_totals}
+```{r activity_totals, message = FALSE, warning = FALSE}
 aggregate_accel_df = accel_df %>%
   mutate(total_activity = rowSums(accel_df[,c(5:1444)])) %>%
   group_by(day_id) %>%
@@ -44,7 +44,7 @@ knitr::kable(aggregate_accel_df)
 ```
 
 #### Third, I am showing the day activity to identify any interesting trends throughout the study period.
-```{r plot_1_accel}
+```{r plot_1_accel, message = FALSE, warning = FALSE}
 ggplot(aggregate_accel_df,aes(x = day_id, y = total_activity, color = weekend)) +
   geom_point() +
   geom_line() +
@@ -59,7 +59,7 @@ ggplot(aggregate_accel_df,aes(x = day_id, y = total_activity, color = weekend)) 
 ```
 
 #### Fourth, I am converting the data to long-format, to be able to plot minutes by days
-```{r accel_long}
+```{r accel_long, message = FALSE, warning = FALSE}
 accel_longer_df = accel_df %>%
   pivot_longer(
     cols = activity_1:activity_1440,
@@ -71,7 +71,7 @@ accel_longer_df = accel_df %>%
 ```
 
 #### Firth (and last), I am plotting the long format of minutes and activity by day to show any daily trends throughout the week.
-```{r plot_2_accel}
+```{r plot_2_accel, message = FALSE, warning = FALSE}
 accel_longer_df %>%
   ggplot(aes(x = minute, y = activity, color = day)) +
   geom_point() +
@@ -92,7 +92,7 @@ accel_longer_df %>%
 # Problem 3
 
 #### First, I load the data from the p8105.datasets
-```{r load_data_nynoaa}
+```{r load_data_nynoaa, message = FALSE, warning = FALSE}
 data("ny_noaa")
 ```
 
@@ -100,7 +100,7 @@ data("ny_noaa")
 The data shows `r ncol(ny_noaa)` variables (`r names(ny_noaa)`) from New York state weather stations from January 1, 1981 through December 31, 2010. It has `r nrow(ny_noaa)` obersvations. Key variables include `r names(ny_noaa)[1]`, which denotes the weather station ID, and `r names(ny_noaa)[2]`, which indicates the date of each subsequent observation. Since each weather station might not collect all variables, missing data is a major issue in the context of this data.
 
 #### Third, I am cleaning the data ahead of the next problems
-```{r clean_data}
+```{r clean_data, message = FALSE, warning = FALSE}
 clean_noaa_df = ny_noaa %>%
   janitor::clean_names() %>%
   separate(date, into = c("year", "month", "day"), sep = '-') %>%
@@ -113,7 +113,7 @@ clean_noaa_df = ny_noaa %>%
 ```
 
 #### Fourth, I calculate the Mode for Snow and describe the rationale in more detail
-```{r}
+```{r, message = FALSE, warning = FALSE}
 find_mode <- function(a) {
   value <- unique(a)
   tab <- tabulate(match(a, value))
@@ -124,7 +124,7 @@ find_mode <- function(a) {
 The most commonly observed values for snowfall are `r find_mode(clean_noaa_df$snow)`, which makes sense because most of the year there is no snow-fall.
 
 #### Fifth, I graph a two-panel plot showing the average max temperature in January and in July in each station across years
-```{r}
+```{r, message = FALSE, warning = FALSE}
 mean_max_temp = clean_noaa_df %>%
   filter(month == "Jan" | month == "Jul") %>%  
   group_by(id, year, month) %>% 
@@ -146,7 +146,7 @@ Is there any observable / interpretable structure? Any outliers?
 
 #### Sixth, I graph a two-panel plot showing tmax vs tmin for the full dataset 
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 maxmin_plot = clean_noaa_df %>%
   ggplot(aes(x = tmax, y = tmin)) +
   geom_hex() +
